@@ -44,6 +44,9 @@
 #import "DTPolishedProgressBar.h"
 #import "DTSessionWindow.h"
 
+@interface TSSTSessionWindowController () <NSWindowDelegate>
+@end
+
 
 @implementation TSSTSessionWindowController
 
@@ -527,6 +530,12 @@
 
 - (IBAction)changeFullscreen:(id)sender
 {
+    // Use Lion fullscreen if available.
+    if ([NSWindow instancesRespondToSelector:@selector(toggleFullScreen:)]) {
+        [NSApp sendAction:@selector(toggleFullScreen:) to:nil from:sender];
+        return;
+    }
+    
     BOOL fullscreen = [[session valueForKey: TSSTFullscreen] boolValue];
     [session setValue: [NSNumber numberWithBool: !fullscreen] forKey: TSSTFullscreen];
 }
@@ -1762,6 +1771,22 @@ images are currently visible and then skips over them.
     }
 	
     return defaultFrame;
+}
+
+/*  Make the toolbar autohide if we enter Lion fullscreen mode. */
+- (NSApplicationPresentationOptions)window:(NSWindow *)window willUseFullScreenPresentationOptions:(NSApplicationPresentationOptions)proposedOptions;
+{
+    return proposedOptions | NSApplicationPresentationAutoHideToolbar;
+}
+
+- (void)windowWillEnterFullScreen:(NSNotification *)notification;
+{
+    [(DTSessionWindow*)self.window setFullscreen:YES];
+}
+
+- (void)windowWillExitFullScreen:(NSNotification *)notification;
+{
+    [(DTSessionWindow*)self.window setFullscreen:NO];
 }
 
 
